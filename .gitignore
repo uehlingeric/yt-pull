@@ -1,4 +1,6 @@
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+.DS_Store
 yt-pull/
-.env

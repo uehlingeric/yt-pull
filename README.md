@@ -2,6 +2,8 @@
 
 YouTube transcript extraction and analysis skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Paste a URL, get a structured summary.
 
+![Claude Code Skill](https://img.shields.io/badge/Claude_Code_Skill-1E3A8A) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green)
+
 ## What It Does
 
 Pulls YouTube video transcripts and metadata, then generates structured summaries via Claude — all from the terminal. Supports single videos and batch channel mode.
@@ -12,6 +14,27 @@ Pulls YouTube video transcripts and metadata, then generates structured summarie
 - **Channel mode** — list recent videos from a channel, batch-pull transcripts
 - **Auto-dependency management** — creates a venv and installs packages automatically
 - **No video/audio download** — only subtitles and metadata
+
+## Setup
+
+### Prerequisites
+
+- Python 3.10+
+- Dependencies auto-install into `/tmp/yt-pull-venv/` (or `pip install -r requirements.txt` for standalone use)
+
+### As a Claude Code Skill
+
+Copy `SKILL.md` to `~/.claude/skills/yt-pull/SKILL.md` and `fetch_transcript.py` alongside it.
+
+### Standalone Script
+
+```bash
+# Fetch transcript + metadata
+python3 fetch_transcript.py VIDEO_ID --output-dir ./output
+
+# List channel videos
+python3 fetch_transcript.py --channel @ChannelHandle --max-videos 10 --output-dir ./output
+```
 
 ## Usage
 
@@ -78,27 +101,6 @@ yt-pull/{channel-slug}/
 
 **Deep** — Everything in standard, plus: timestamped outline, argument analysis, audience context, related content, critical assessment, action items
 
-## Setup
-
-### Prerequisites
-
-- Python 3.10+
-- Dependencies are auto-installed into `/tmp/yt-pull-venv/`
-
-### As a Claude Code Skill
-
-Copy `SKILL.md` to `~/.claude/skills/yt-pull/SKILL.md` and `fetch_transcript.py` alongside it.
-
-### Standalone Script
-
-```bash
-# Fetch transcript + metadata
-python3 fetch_transcript.py VIDEO_ID --output-dir ./output
-
-# List channel videos
-python3 fetch_transcript.py --channel @ChannelHandle --max-videos 10 --output-dir ./output
-```
-
 ## Architecture
 
 Two-file design:
@@ -115,4 +117,4 @@ The skill spawns analysis as a subagent to keep large transcripts out of the mai
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
