@@ -94,7 +94,7 @@ Validate: 11 characters, alphanumeric plus hyphens and underscores.
 If in channel mode, list recent videos first:
 
 ```bash
-python3 ~/.claude/skills/yt-pull/fetch_transcript.py \
+uv run ~/.claude/skills/yt-pull/fetch_transcript.py \
   --channel CHANNEL_INPUT \
   --max-videos MAX \
   --output-dir OUTPUT_DIR
@@ -114,7 +114,7 @@ For each selected video, run Step 2 with that video's ID, using `{output}/{chann
 This skill ships a bundled helper script. Run it:
 
 ```bash
-python3 ~/.claude/skills/yt-pull/fetch_transcript.py VIDEO_ID \
+uv run ~/.claude/skills/yt-pull/fetch_transcript.py VIDEO_ID \
   --lang LANG \
   --output-dir OUTPUT_DIR
 ```
@@ -133,17 +133,9 @@ The script handles everything:
 Try in this order (modern Linux distros block system-wide pip):
 
 ```bash
-# Option 1: uv (fastest)
-uv tool install yt-dlp
-
-# Option 2: temp venv
-python3 -m venv /tmp/yt-pull-venv && /tmp/yt-pull-venv/bin/pip install youtube-transcript-api yt-dlp
-
-# Option 3: pipx
-pipx install yt-dlp
-
-# Option 4: pip (only works in permissive environments)
-pip install youtube-transcript-api yt-dlp
+# uv resolves the script's inline (PEP 723) dependencies automatically.
+# If uv itself is missing, install it first:
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 #### Manual fallback — fetch transcript

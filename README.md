@@ -4,6 +4,8 @@ YouTube transcript extraction and analysis skill for [Claude Code](https://docs.
 
 ![Claude Code Skill](https://img.shields.io/badge/Claude_Code_Skill-1E3A8A) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
+![Pipeline](docs/assets/pipeline.png)
+
 ## What It Does
 
 Pulls YouTube video transcripts and metadata, then generates structured summaries via Claude — all from the terminal. Supports single videos and batch channel mode.
@@ -19,8 +21,7 @@ Pulls YouTube video transcripts and metadata, then generates structured summarie
 
 ### Prerequisites
 
-- Python 3.10+
-- Dependencies auto-install into `/tmp/yt-pull-venv/` (or `pip install -r requirements.txt` for standalone use)
+- [uv](https://docs.astral.sh/uv/) — resolves Python 3.10+ and both dependencies automatically from the script's inline (PEP 723) metadata
 
 ### As a Claude Code Skill
 
@@ -30,10 +31,10 @@ Copy `SKILL.md` to `~/.claude/skills/yt-pull/SKILL.md` and `fetch_transcript.py`
 
 ```bash
 # Fetch transcript + metadata
-python3 fetch_transcript.py VIDEO_ID --output-dir ./output
+uv run fetch_transcript.py VIDEO_ID --output-dir ./output
 
 # List channel videos
-python3 fetch_transcript.py --channel @ChannelHandle --max-videos 10 --output-dir ./output
+uv run fetch_transcript.py --channel @ChannelHandle --max-videos 10 --output-dir ./output
 ```
 
 ## Usage
@@ -106,8 +107,7 @@ yt-pull/{channel-slug}/
 Two-file design:
 
 - **`SKILL.md`** — Skill definition with the full execution pipeline (parse input, fetch transcript, spawn analysis subagent, output results)
-- **`fetch_transcript.py`** (~465 lines) — Standalone Python script that handles:
-  - Auto-dependency installation (`youtube-transcript-api`, `yt-dlp`) via venv/uv/pipx
+- **`fetch_transcript.py`** (~370 lines) — Standalone script with PEP 723 inline dependencies, run via `uv run`:
   - Primary transcript method: `youtube-transcript-api` (lightweight, structured timestamps)
   - Fallback: `yt-dlp` with VTT parsing and cleaning
   - Metadata via `yt-dlp --dump-json`

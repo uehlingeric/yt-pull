@@ -1,6 +1,8 @@
+.DS_Store
+output/
 __pycache__/
 *.py[cod]
+.ruff_cache/
 .venv/
 venv/
-.DS_Store
 yt-pull/

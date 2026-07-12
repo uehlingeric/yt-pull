@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "youtube-transcript-api>=0.6.0",
+#     "yt-dlp>=2024.1.0",
+# ]
+# ///
 """
 fetch_transcript.py — YouTube transcript fetcher for yt-pull skill.
 
 Usage:
     # Single video
-    python3 fetch_transcript.py <video_id> [--lang en] [--output-dir ./out]
+    uv run fetch_transcript.py <video_id> [--lang en] [--output-dir ./out]
 
     # List videos from a channel
-    python3 fetch_transcript.py --channel <channel_name_or_url> [--max-videos 10] [--output-dir ./out]
+    uv run fetch_transcript.py --channel <channel_name_or_url> [--max-videos 10] [--output-dir ./out]
 
 Outputs (single video):
     transcript.txt   — clean plain text
@@ -31,91 +38,6 @@ import shutil
 from pathlib import Path
 
 
-VENV_DIR = Path("/tmp/yt-pull-venv")
-
-
-def _get_venv_python() -> str | None:
-    """Return the venv python path if the venv exists and is usable."""
-    venv_python = VENV_DIR / "bin" / "python3"
-    if venv_python.exists():
-        return str(venv_python)
-    return None
-
-
-def _create_venv() -> str | None:
-    """Create a persistent venv at VENV_DIR. Returns python path or None."""
-    if _get_venv_python():
-        return _get_venv_python()
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "venv", str(VENV_DIR)],
-            capture_output=True, timeout=30, check=True,
-        )
-        print(f"[deps] Created venv at {VENV_DIR}", file=sys.stderr)
-        return _get_venv_python()
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-        print(f"[deps] Failed to create venv: {e}", file=sys.stderr)
-        return None
-
-
-def _pip_install(pip_python: str, package_name: str) -> bool:
-    """Run pip install using a specific python interpreter."""
-    try:
-        subprocess.run(
-            [pip_python, "-m", "pip", "install", "--quiet", package_name],
-            capture_output=True, timeout=120, check=True,
-        )
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-        return False
-
-
-def ensure_package(package_name: str, import_name: str = None) -> bool:
-    """Try to import a package; if missing, install it (creating a venv if needed)."""
-    import_name = import_name or package_name
-    try:
-        __import__(import_name)
-        return True
-    except ImportError:
-        pass
-
-    # If we're already running inside the venv, just pip install directly
-    if sys.prefix != sys.base_prefix:
-        if _pip_install(sys.executable, package_name):
-            return True
-
-    # Try pip install into current python (works on permissive systems)
-    if _pip_install(sys.executable, package_name):
-        try:
-            __import__(import_name)
-            return True
-        except ImportError:
-            pass
-
-    # Try uv
-    if shutil.which("uv"):
-        try:
-            subprocess.run(
-                ["uv", "pip", "install", package_name],
-                capture_output=True, timeout=60, check=True,
-            )
-            __import__(import_name)
-            return True
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ImportError):
-            pass
-
-    # Create a venv and install there, then re-exec this script under the venv python
-    venv_python = _create_venv()
-    if venv_python and venv_python != sys.executable:
-        if _pip_install(venv_python, package_name):
-            # Re-exec this script under the venv python so imports work
-            print(f"[deps] Installed {package_name} in venv, re-launching...", file=sys.stderr)
-            os.execv(venv_python, [venv_python] + sys.argv)
-            # execv replaces the process — this line is never reached
-
-    return False
-
-
 # ---------------------------------------------------------------------------
 # Primary method: youtube-transcript-api
 # ---------------------------------------------------------------------------
@@ -124,9 +46,6 @@ def fetch_with_transcript_api(video_id: str, lang: str) -> dict | None:
     """
     Returns {"entries": [{text, start, duration}, ...], "source": "api"} or None.
     """
-    if not ensure_package("youtube-transcript-api", "youtube_transcript_api"):
-        return None
-
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -155,15 +74,8 @@ def fetch_with_ytdlp(video_id: str, lang: str, tmp_dir: str) -> dict | None:
     """
     Returns {"entries": [{text, start, duration}, ...], "source": "yt-dlp"} or None.
     """
+    # Prefer the yt-dlp executable; fall back to running it as a python module
     ytdlp = shutil.which("yt-dlp")
-    if not ytdlp:
-        # Try to install
-        if not ensure_package("yt-dlp"):
-            return None
-        ytdlp = shutil.which("yt-dlp")
-        if not ytdlp:
-            # Might be installed but not on PATH — try via python module
-            ytdlp = None
 
     url = f"https://www.youtube.com/watch?v={video_id}"
     out_template = os.path.join(tmp_dir, "%(id)s")
@@ -256,9 +168,6 @@ def clean_subtitle_text(text: str) -> str:
 def fetch_metadata(video_id: str) -> dict | None:
     """Fetch video metadata via yt-dlp --dump-json."""
     ytdlp = shutil.which("yt-dlp")
-    if not ytdlp:
-        ensure_package("yt-dlp")
-        ytdlp = shutil.which("yt-dlp")
 
     url = f"https://www.youtube.com/watch?v={video_id}"
 
@@ -338,9 +247,6 @@ def list_channel_videos(channel_input: str, max_videos: int = 10) -> list[dict] 
     Returns [{id, title, upload_date, duration_string, view_count, url}, ...] or None.
     """
     ytdlp = shutil.which("yt-dlp")
-    if not ytdlp:
-        ensure_package("yt-dlp")
-        ytdlp = shutil.which("yt-dlp")
 
     channel_url = resolve_channel_url(channel_input)
     print(f"Listing up to {max_videos} videos from {channel_url}...", file=sys.stderr)

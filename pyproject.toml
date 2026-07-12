@@ -1,0 +1,21 @@
+[project]
+name = "yt-pull"
+version = "1.0.0"
+description = "YouTube transcript extraction and analysis skill for Claude Code"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Eric Uehling" }]
+requires-python = ">=3.10"
+dependencies = [
+    "youtube-transcript-api>=0.6.0",
+    "yt-dlp>=2024.1.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = ["ruff>=0.8.0"]
+
+[tool.ruff]
+line-length = 100
